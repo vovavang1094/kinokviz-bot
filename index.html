@@ -2,72 +2,93 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Тест Mini App</title>
+    <title>Кино Квиз Тест</title>
+    <style>
+        body { font-family: Arial; padding: 20px; text-align: center; }
+        button { padding: 15px 30px; font-size: 18px; margin: 10px; }
+    </style>
 </head>
-<body style="padding: 20px; font-family: Arial;">
+<body>
     <h1>🎬 Тест связи с ботом</h1>
+    <p>ID теста: <span id="testId">1</span></p>
     
-    <button onclick="sendTest()" style="padding: 15px; font-size: 18px;">
-        🔘 Нажмите для теста
-    </button>
+    <button onclick="sendTest(1)">📨 Тест 1: Простые данные</button><br>
+    <button onclick="sendTest(2)">🎮 Тест 2: Создать комнату</button><br>
+    <button onclick="sendTest(3)">🔄 Тест 3: JSON данные</button>
     
-    <div id="status" style="margin-top: 20px; padding: 10px; background: #f0f0f0;"></div>
+    <div id="status" style="margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 10px;">
+        Жду действий...
+    </div>
     
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js?2"></script>
     <script>
         const tg = window.Telegram.WebApp;
+        let testCounter = 1;
         
-        // Расширяем на весь экран
         tg.expand();
         tg.enableClosingConfirmation();
         
         function updateStatus(text) {
-            document.getElementById('status').innerHTML = text;
+            document.getElementById('status').innerHTML = `[${new Date().toLocaleTimeString()}] ${text}`;
             console.log("Status:", text);
         }
         
-        function sendTest() {
-            updateStatus("🔄 Отправляю данные боту...");
+        function sendTest(type) {
+            testCounter++;
+            document.getElementById('testId').textContent = testCounter;
             
-            const testData = {
-                action: "test_from_mini_app",
-                timestamp: new Date().toISOString(),
-                user: tg.initDataUnsafe?.user?.first_name || "Аноним"
-            };
+            let testData;
             
-            console.log("Отправляю:", testData);
+            switch(type) {
+                case 1:
+                    testData = {action: "simple_test", counter: testCounter};
+                    updateStatus("🔄 Отправляю простой тест...");
+                    break;
+                case 2:
+                    testData = {action: "create_room", user: "TestUser", time: new Date().toISOString()};
+                    updateStatus("🏠 Создаю тестовую комнату...");
+                    break;
+                case 3:
+                    testData = {
+                        type: "complex_json",
+                        data: {test: true, number: testCounter, array: [1,2,3]},
+                        meta: {source: "mini_app", version: "1.0"}
+                    };
+                    updateStatus("📊 Отправляю сложный JSON...");
+                    break;
+            }
+            
+            console.log(`📤 Тест #${testCounter}:`, testData);
             
             // ОТПРАВКА ДАННЫХ БОТУ
             tg.sendData(JSON.stringify(testData));
             
-            updateStatus("✅ Данные отправлены! Ждем ответ...");
+            updateStatus("✅ Данные отправлены! Жду ответа...");
         }
         
-        // СЛУШАТЕЛЬ ОТВЕТОВ ОТ БОТА
+        // СЛУШАТЕЛЬ ОТВЕТОВ
         tg.onEvent('webAppDataReceived', (event) => {
             console.log("📥 Ответ от бота:", event.data);
-            updateStatus("🎉 Получен ответ от бота: " + event.data);
+            updateStatus("🎉 Получен ответ от бота!");
             
             try {
                 const data = JSON.parse(event.data);
-                alert("Бот ответил: " + JSON.stringify(data));
+                alert(`Бот ответил!\nТест #${data.counter || '?'}\n${JSON.stringify(data, null, 2)}`);
             } catch (e) {
-                console.error("Ошибка парсинга:", e);
+                alert("Ответ: " + event.data);
             }
         });
         
-        // Готовность
         tg.ready();
         updateStatus("✅ Mini App готов к работе");
-        console.log("Mini App инициализирован");
+        console.log("Mini App инициализирован", tg.initDataUnsafe);
         
-        // Авто-тест через 2 секунды
+        // Авто-тест через 3 секунды
         setTimeout(() => {
-            console.log("Авто-тест через 2 сек...");
-        }, 2000);
+            console.log("Авто-тест через 3 секунды...");
+            updateStatus("⏰ Авто-тест через 3 сек...");
+        }, 3000);
     </script>
 </body>
 </html>
-
-
 
