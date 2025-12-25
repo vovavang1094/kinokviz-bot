@@ -552,19 +552,16 @@
         
         // Создать комнату
         function createRoom() {
-            console.log("🎬 Нажимаю 'Создать игру'");
+            const user = window.Telegram.WebApp.initDataUnsafe?.user;
             
-            const testData = {
-                action: "test_create",
-                user: tg.initDataUnsafe?.user?.first_name || "Тест",
-                time: new Date().toISOString()
-            };
+            // ЭТА СТРОКА ОТПРАВЛЯЕТ ДАННЫЕ БОТУ:
+            window.Telegram.WebApp.sendData(JSON.stringify({
+                action: 'create_room',
+                username: user?.first_name || 'Игрок',
+                user_id: user?.id || Date.now()
+            }));
             
-            console.log("Отправляю тестовые данные:", testData);
-            tg.sendData(JSON.stringify(testData));
-            
-            // Показываем сообщение пользователю
-            alert("Запрос отправлен. Проверьте консоль Python бота!");
+            console.log("✅ Данные отправлены через Telegram API");
         }
         
         // Присоединиться к игре
@@ -915,4 +912,5 @@
     </script>
 </body>
 </html>
+
 
