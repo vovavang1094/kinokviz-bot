@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 Кино Квиз</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .btn-primary {
+            background: #4CAF50;
+        }
+        .btn-secondary {
+            background: #2196F3;
+        }
+        .btn-danger {
+            background: #f44336;
+        }
+        .btn-info {
+            background: #00bcd4;
+        }
+        .room-code {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .code {
+            font-size: 2em;
+            font-weight: bold;
+            letter-spacing: 5px;
+            margin: 10px 0;
+            color: #FFD700;
+        }
+        .player-list {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .player-item {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        .player-item:last-child {
+            border-bottom: none;
+        }
+        .question {
+            background: white;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .option-btn {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option-btn:hover {
+            background: #f5f5f5;
+        }
+        .option-btn.correct {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        .option-btn.incorrect {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+        .results {
+            background: white;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .result-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .result-item.winner {
+            background: #FFF9C4;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div class="header">
+            <h1>🎬 Кино Квиз</h1>
+            <p>Проверьте свои знания кино!</p>
+        </div>
+        
+        <!-- Главное меню -->
+        <div id="mainMenu">
+            <button class="btn btn-primary" onclick="showScreen('createGame')">🏠 Создать игру</button>
+            <button class="btn btn-secondary" onclick="showScreen('joinGame')">🔗 Присоединиться</button>
+            <button class="btn btn-info" onclick="showScreen('rules')">❓ Правила</button>
+        </div>
+        
+        <!-- Создание игры -->
+        <div id="createGame" style="display: none;">
+            <div class="room-code">
+                <h3>Код комнаты:</h3>
+                <div class="code" id="roomCode">XXXXXX</div>
+                <p>Отправьте этот код друзьям!</p>
+            </div>
+            <div class="player-list" id="playerList">
+                <h3>Игроки:</h3>
+                <div class="player-item">👤 Вы (Создатель)</div>
+            </div>
+            <button class="btn btn-primary" onclick="startGame()">▶️ Начать игру</button>
+            <button class="btn btn-danger" onclick="showScreen('mainMenu')">🔙 Назад</button>
+        </div>
+        
+        <!-- Присоединение к игре -->
+        <div id="joinGame" style="display: none;">
+            <h3>Введите код комнаты:</h3>
+            <input type="text" id="roomCodeInput" placeholder="XXXXXX" style="width: 100%; padding: 15px; font-size: 18px; text-align: center; border-radius: 10px; border: none; margin: 20px 0;">
+            <button class="btn btn-primary" onclick="joinRoom()">✅ Присоединиться</button>
+            <button class="btn btn-danger" onclick="showScreen('mainMenu')">🔙 Назад</button>
+        </div>
+        
+        <!-- Ожидание начала -->
+        <div id="waitingRoom" style="display: none;">
+            <div class="room-code">
+                <h3>Код комнаты:</h3>
+                <div class="code" id="waitingRoomCode">XXXXXX</div>
+            </div>
+            <div class="player-list" id="waitingPlayers">
+                <h3>Ожидание игроков...</h3>
+            </div>
+            <button class="btn btn-danger" onclick="leaveRoom()">🚪 Выйти из комнаты</button>
+        </div>
+        
+        <!-- Вопрос -->
+        <div id="questionScreen" style="display: none;">
+            <div class="question">
+                <h3 id="questionText">Вопрос будет здесь...</h3>
+                <div id="optionsContainer"></div>
+            </div>
+        </div>
+        
+        <!-- Результаты -->
+        <div id="resultsScreen" style="display: none;">
+            <div class="results">
+                <h2>🏆 Результаты</h2>
+                <div id="resultsList"></div>
+                <button class="btn btn-primary" onclick="playAgain()">🔄 Играть снова</button>
+                <button class="btn btn-danger" onclick="showScreen('mainMenu')">🏠 В главное меню</button>
+            </div>
+        </div>
+        
+        <!-- Правила -->
+        <div id="rules" style="display: none;">
+            <div class="question">
+                <h3>🎬 Правила Кино Квиза</h3>
+                <p>1. Игра поддерживает от 1 до 6 игроков</p>
+                <p>2. Квиз состоит из 10 вопросов о кино</p>
+                <p>3. В каждом вопросе 4 варианта ответа</p>
+                <p>4. После выбора показывается правильный вариант</p>
+                <p>5. За каждый правильный ответ - 1 очко</p>
+                <p>6. В конце - таблица результатов</p>
+                <button class="btn btn-danger" onclick="showScreen('mainMenu')">🔙 Назад</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentRoomCode = '';
+        let isCreator = false;
+        
+        // Показ экранов
+        function showScreen(screenId) {
+            document.querySelectorAll('div[id]').forEach(div => {
+                div.style.display = 'none';
+            });
+            document.getElementById(screenId).style.display = 'block';
+            
+            if (screenId === 'createGame') {
+                createNewRoom();
+            }
+        }
+        
+        // Создание новой комнаты
+        function createNewRoom() {
+            // Генерация случайного кода
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            currentRoomCode = code;
+            document.getElementById('roomCode').textContent = code;
+            isCreator = true;
+            
+            // Отправка кода на сервер через бота
+            if (window.Telegram.WebApp) {
+                window.Telegram.WebApp.sendData(JSON.stringify({
+                    action: 'create_room',
+                    room_code: code
+                }));
+            }
+        }
+        
+        // Присоединение к комнате
+        function joinRoom() {
+            const code = document.getElementById('roomCodeInput').value.toUpperCase();
+            if (code.length === 6) {
+                currentRoomCode = code;
+                isCreator = false;
+                
+                document.getElementById('waitingRoomCode').textContent = code;
+                showScreen('waitingRoom');
+                
+                // Отправка запроса на присоединение
+                if (window.Telegram.WebApp) {
+                    window.Telegram.WebApp.sendData(JSON.stringify({
+                        action: 'join_room',
+                        room_code: code
+                    }));
+                }
+            } else {
+                alert('Введите 6-значный код!');
+            }
+        }
+        
+        // Начало игры
+        function startGame() {
+            if (window.Telegram.WebApp && isCreator) {
+                window.Telegram.WebApp.sendData(JSON.stringify({
+                    action: 'start_game',
+                    room_code: currentRoomCode
+                }));
+            }
+        }
+        
+        // Выход из комнаты
+        function leaveRoom() {
+            if (window.Telegram.WebApp) {
+                window.Telegram.WebApp.sendData(JSON.stringify({
+                    action: 'leave_room',
+                    room_code: currentRoomCode
+                }));
+            }
+            showScreen('mainMenu');
+        }
+        
+        // Новая игра
+        function playAgain() {
+            showScreen('mainMenu');
+        }
+        
+        // Инициализация Telegram Web App
+        if (window.Telegram && window.Telegram.WebApp) {
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+            
+            // Обработка данных от бота
+            Telegram.WebApp.onEvent('message', (data) => {
+                try {
+                    const message = JSON.parse(data);
+                    handleBotMessage(message);
+                } catch (e) {
+                    console.error('Error parsing message:', e);
+                }
+            });
+        }
+        
+        // Обработка сообщений от бота
+        function handleBotMessage(message) {
+            switch(message.type) {
+                case 'question':
+                    showQuestion(message);
+                    break;
+                case 'results':
+                    showResults(message);
+                    break;
+                case 'player_joined':
+                    updatePlayerList(message.players);
+                    break;
+                case 'game_started':
+                    alert('Игра начинается!');
+                    break;
+            }
+        }
+        
+        // Показать вопрос
+        function showQuestion(data) {
+            document.getElementById('questionText').textContent = `Вопрос ${data.index + 1}/10: ${data.question}`;
+            
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            
+            data.options.forEach((option, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
+                btn.onclick = () => selectAnswer(idx, data.index);
+                container.appendChild(btn);
+            });
+            
+            showScreen('questionScreen');
+        }
+        
+        // Выбор ответа
+        function selectAnswer(answerIndex, questionIndex) {
+            // Отправка ответа боту
+            if (window.Telegram.WebApp) {
+                window.Telegram.WebApp.sendData(JSON.stringify({
+                    action: 'answer',
+                    room_code: currentRoomCode,
+                    question_index: questionIndex,
+                    answer_index: answerIndex
+                }));
+            }
+            
+            // Визуальная обратная связь
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach((btn, idx) => {
+                if (idx === answerIndex) {
+                    btn.classList.add('selected');
+                }
+            });
+        }
+        
+        // Показать результаты
+        function showResults(data) {
+            const container = document.getElementById('resultsList');
+            container.innerHTML = '';
+            
+            data.players.forEach((player, index) => {
+                const div = document.createElement('div');
+                div.className = 'result-item' + (index === 0 ? ' winner' : '');
+                
+                let medal = '';
+                if (index === 0) medal = '🥇 ';
+                else if (index === 1) medal = '🥈 ';
+                else if (index === 2) medal = '🥉 ';
+                
+                div.innerHTML = `
+                    <strong>${index + 1}. ${medal}${player.name}</strong>
+                    <span style="float: right;">${player.score}/10</span>
+                `;
+                container.appendChild(div);
+            });
+            
+            showScreen('resultsScreen');
+        }
+        
+        // Обновление списка игроков
+        function updatePlayerList(players) {
+            const container = document.getElementById('waitingPlayers');
+            container.innerHTML = '<h3>Игроки в комнате:</h3>';
+            
+            players.forEach(player => {
+                const div = document.createElement('div');
+                div.className = 'player-item';
+                div.textContent = `👤 ${player}`;
+                container.appendChild(div);
+            });
+        }
+        
+        // Инициализация
+        showScreen('mainMenu');
+    </script>
+</body>
+</html>
